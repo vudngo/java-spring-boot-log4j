@@ -1,0 +1,1 @@
+web: java -Dsentry.release=heroku.1.0 -jar target/sentry-spring-boot-log4j2-example-0.0.1.jar
