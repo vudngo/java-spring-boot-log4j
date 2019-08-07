@@ -1,8 +1,7 @@
 #!/bin/bash
 
-
 run_curl () {
- for ((i=0; i <=  ((RANDOM % 10)); i++))
+ for ((i=0; i<=((RANDOM % 10)); i++))
  do
   curl "$@";
  done
