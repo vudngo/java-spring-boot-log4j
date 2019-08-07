@@ -4,7 +4,7 @@ NAME=java
 RANDOM_STRING=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`
 
 run_curl () {
- for ((i=0; i <=  RANDOM % 10 + RANDOM % 10; i++))
+ for ((i=0; i <=  RANDOM % 10; i++))
  do
   curl "$@";
  done
