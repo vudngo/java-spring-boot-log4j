@@ -26,12 +26,12 @@ public class CustomFilter implements Filter {
 			throws IOException, ServletException {       
 		//Defined in sentry.properties - will be added as Tags
 		MDC.put("customKey1", "value1");
-        MDC.put("customKey2", "value2");
-        
-        //Not defined in sentry.properties - will be added to ADDITIONAL DATA 
-        MDC.put("customKey3", "value3");
-          
-        chain.doFilter(request, response);
+		MDC.put("customKey2", "value2");
+		        
+		//Not defined in sentry.properties - will be added to ADDITIONAL DATA 
+		MDC.put("customKey3", "value3");
+		          
+		chain.doFilter(request, response);
 	}
 
 	@Override
