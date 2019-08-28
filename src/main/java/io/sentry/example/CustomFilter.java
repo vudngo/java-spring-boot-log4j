@@ -23,24 +23,20 @@ public class CustomFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
-        
+			throws IOException, ServletException {       
 		//Defined in sentry.properties - will be added as Tags
 		MDC.put("customKey1", "value1");
         MDC.put("customKey2", "value2");
         
         //Not defined in sentry.properties - will be added to ADDITIONAL DATA 
         MDC.put("customKey3", "value3");
-        
-        
+          
         chain.doFilter(request, response);
-
 	}
 
 	@Override
 	public void destroy() {
 		// TODO Auto-generated method stub
-
 	}
 
 }

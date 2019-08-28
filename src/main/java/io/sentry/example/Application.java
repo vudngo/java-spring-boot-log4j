@@ -68,7 +68,6 @@ public class Application {
             Sentry.getContext().recordBreadcrumb(
                 new BreadcrumbBuilder().setMessage("Processing checkout for user: " + userEmail).setType(Type.USER).setLevel(Level.INFO).setCategory("custom").build()
             );
-
             
             // perform checkout
             checkout(order.getCart());
@@ -87,7 +86,6 @@ public class Application {
     @RequestMapping("/capture-message")
     @ResponseBody
     String captureMessage() {
-        
     	// MDC extras (added to Sentry event as ADDITIONAL DATA) 
         ThreadContext.put("extra_key", "extra_value");
    
@@ -117,7 +115,6 @@ public class Application {
     @RequestMapping("/filtered")
     @ResponseBody
     String handledFilteredError() {
-
         try {
             int example = 1 / 0;
         } catch (Exception e) {
@@ -153,12 +150,10 @@ public class Application {
         
         Sentry.getStoredClient().addShouldSendEventCallback(new ShouldSendEventCallback() {
 		    @Override
-		    public boolean shouldSend(Event event) {
-		    	 
+		    public boolean shouldSend(Event event) {		    	 
 		        if (event.getMessage().contains("foo")) {
 		            return false;
-		        }		   
-		
+		        }		   		
 		        return true;
 		    }
 		});
