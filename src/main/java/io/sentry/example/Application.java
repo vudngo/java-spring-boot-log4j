@@ -1,6 +1,13 @@
 package io.sentry.example;
 
 import io.sentry.Sentry;
+import io.sentry.event.Breadcrumb.Level;
+import io.sentry.event.Breadcrumb.Type;
+import io.sentry.event.BreadcrumbBuilder;
+import io.sentry.event.Event;
+import io.sentry.event.UserBuilder;
+import io.sentry.event.helper.ShouldSendEventCallback;
+
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -14,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Controller
 @CrossOrigin
@@ -49,10 +57,24 @@ public class Application {
             ThreadContext.put("session_id", sessionId);
             ThreadContext.put("transaction_id", transactionId);
 
+            String userEmail = order.getEmail();
+            logger.info("Processing order for: " + userEmail);
+            
+            // Set the user in the current context.
+            Sentry.getContext().setUser(
+                new UserBuilder().setEmail(userEmail).build()
+            );
+            
+            Sentry.getContext().recordBreadcrumb(
+                new BreadcrumbBuilder().setMessage("Processing checkout for user: " + userEmail).setType(Type.USER).setLevel(Level.INFO).setCategory("custom").build()
+            );
+
+            
             // perform checkout
-            logger.info("Processing order for: " + order.getEmail());
             checkout(order.getCart());
+            
         } catch (Exception e) {
+        	
             // log error + return 500, if exception
             logger.error("Error while checking out", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Checkout error");
@@ -65,8 +87,12 @@ public class Application {
     @RequestMapping("/capture-message")
     @ResponseBody
     String captureMessage() {
-        String someLocalVariable = "stack locals";
-        ThreadContext.put("customKey1", "customValue1");
+        
+    	// MDC extras (added to Sentry event as ADDITIONAL DATA) 
+        ThreadContext.put("extra_key", "extra_value");
+   
+        // NDC extras are sent under 'log4j2-NDC'
+        ThreadContext.push("Extra_details");
 
         logger.debug("Debug message");
         logger.info("Info message");
@@ -78,6 +104,7 @@ public class Application {
     @ResponseBody
     String handledError() {
         String someLocalVariable = "stack locals";
+        
         try {
             int example = 1 / 0;
         } catch (Exception e) {
@@ -86,19 +113,54 @@ public class Application {
         }
         return "Success";
     }
+    
+    @RequestMapping("/filtered")
+    @ResponseBody
+    String handledFilteredError() {
+
+        try {
+            int example = 1 / 0;
+        } catch (Exception e) {
+            logger.error("Message contains foo!", e);
+        }
+        return "Success";
+    }  
+    
 
     @RequestMapping("/unhandled")
     @ResponseBody
     String unhandledError() {
+    	 String someLocalVariable = "stack locals";
+    	 
         throw new RuntimeException("Unhandled exception!");
     }
 
     public static void main(String[] args) {
-        Sentry.init();
-        Sentry.getStoredClient().setServerName("fe1");
+    	initSentry();
         inventory.put("wrench", 0);
         inventory.put("nails", 0);
         inventory.put("hammer", 1);
         SpringApplication.run(Application.class, args);
+    }
+    
+    private static void initSentry() {
+    	Sentry.init();
+        
+    	Sentry.getStoredClient().setServerName("fe1");
+    	
+    	//Added as tags to Sentry event
+        Sentry.getStoredClient().addTag("dynamicTag1", "1.0");
+        
+        Sentry.getStoredClient().addShouldSendEventCallback(new ShouldSendEventCallback() {
+		    @Override
+		    public boolean shouldSend(Event event) {
+		    	 
+		        if (event.getMessage().contains("foo")) {
+		            return false;
+		        }		   
+		
+		        return true;
+		    }
+		});
     }
 }
