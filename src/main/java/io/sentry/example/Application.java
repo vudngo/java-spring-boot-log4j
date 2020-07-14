@@ -7,6 +7,7 @@ import io.sentry.event.BreadcrumbBuilder;
 import io.sentry.event.Event;
 import io.sentry.event.UserBuilder;
 import io.sentry.event.helper.ShouldSendEventCallback;
+import java.util.Random;
 
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.*;  
 
 
 @Controller
@@ -46,6 +48,19 @@ public class Application {
         }
         inventory = tempInventory;
     }
+
+    private void doSomething() {
+        //logger.error("logger error");
+        Random rand = new Random();
+        int upperbound = 100;
+        int companyId = rand.nextInt(upperbound);
+        try {
+            int example = 1 / 0;
+        } catch (Exception exception) {
+            logger.error("Failed to complete sync; companyId={}", companyId, exception);
+        }
+    }
+
 
     @PostMapping(value="/checkout", consumes = "application/json")
     @ResponseBody
@@ -132,6 +147,13 @@ public class Application {
         throw new RuntimeException("Unhandled exception!");
     }
 
+    @RequestMapping("/handlelogger")
+    @ResponseBody
+    String handleLogger() {
+        doSomething();
+        return "Success";
+    }  
+
     public static void main(String[] args) {
     	initSentry();
         inventory.put("wrench", 0);
@@ -150,10 +172,11 @@ public class Application {
         
         Sentry.getStoredClient().addShouldSendEventCallback(new ShouldSendEventCallback() {
 		    @Override
-		    public boolean shouldSend(Event event) {		    	 
-		        if (event.getMessage().contains("foo")) {
-		            return false;
-		        }		   		
+		    public boolean shouldSend(Event event) {
+                List<String> list = new ArrayList<String>();  
+                //the event.getLogEntry() function does not exist
+                list.add(event.getLogEntry()); 
+                event.setFingerprint(list);
 		        return true;
 		    }
 		});
